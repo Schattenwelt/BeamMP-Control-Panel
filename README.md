@@ -5,8 +5,8 @@ Ein selbstgehostetes, login-geschütztes Web-Panel zur Verwaltung eines
 Ubuntu-/Debian-LXC-Container. Start/Stopp/Neustart, Server-Update, Konfiguration
 und Mod-Verwaltung im Browser – ohne SSH.
 
-Portiert aus dem Palworld/ARK/ASA/Satisfactory-Control-Panel; gleiche Bedienung,
-an die BeamMP-Besonderheiten angepasst.
+Basiert auf einer bewährten Control-Panel-Codebasis für Dedicated-Server,
+angepasst an die BeamMP-Besonderheiten.
 
 ---
 
@@ -35,13 +35,13 @@ an die BeamMP-Besonderheiten angepasst.
 
 ## Voraussetzungen
 
-- Ein **LXC-Container** (Proxmox) oder eine VM mit **Ubuntu 22.04/24.04** oder
+- Ein **LXC-Container** (z. B. unter Proxmox) oder eine VM mit **Ubuntu 22.04/24.04** oder
   **Debian 12/13** (x86_64 oder arm64).
 - Root-Zugriff im Container.
 - Ein **BeamMP-AuthKey** (kostenlos): https://keymaster.beammp.com – nötig, damit
   der Server in der öffentlichen Serverliste erscheint. Kann bei der Installation
   oder später im Panel eingetragen werden.
-- Freigegebener **Server-Port `30814` als TCP *und* UDP** (Firewall/OPNsense).
+- Freigegebener **Server-Port `30814` als TCP *und* UDP** (Firewall/Router).
 
 ---
 
@@ -101,8 +101,8 @@ Reboot startet, richtet sich nach der letzten Aktion im Panel:
 - **Starten** → Autostart an (Server kommt nach Reboot von allein hoch)
 - **Stoppen** → Autostart aus
 
-Damit der Container selbst nach einem Proxmox-Neustart läuft, in Proxmox die
-Container-Option **„Start at boot“ (`onboot=1`)** setzen.
+Falls du Proxmox einsetzt: Damit der Container selbst nach einem Host-Neustart
+läuft, dort die Container-Option **„Start at boot“ (`onboot=1`)** setzen.
 
 ---
 
