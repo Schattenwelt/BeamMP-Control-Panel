@@ -1,0 +1,15 @@
+# Laufzeit-/Instanzdaten (werden vom Installer erzeugt, gehören nicht ins Repo)
+panel.json
+users.json
+*.bak
+*.bak.*
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+# Editor/OS
+.vscode/
+.idea/
+.DS_Store
+.commit
