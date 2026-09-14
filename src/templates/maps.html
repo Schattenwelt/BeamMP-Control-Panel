@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}{{ t('nav_maps') }} · BeamMP Panel{% endblock %}
+{% block content %}
+
+<section class="panel">
+  <div class="panel-head">
+    <h2>{{ t('maps_active') }}</h2>
+    <span class="muted mono">{{ active_name or '–' }}{% if active_name and active_name != active %} <span class="mono small">({{ active }})</span>{% endif %}</span>
+  </div>
+  <p class="muted small" style="margin-top:0">{{ t('maps_active_hint') }}</p>
+
+  <h3 class="subhead">{{ t('maps_official') }}</h3>
+  <div class="map-grid">
+    {% for m in official %}
+    <form method="post" action="{{ url_for('maps_select') }}" class="map-card {{ 'on' if m.path == active }}">
+      <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+      <input type="hidden" name="path" value="{{ m.path }}">
+      <div class="map-name">{{ m.name }}</div>
+      <div class="map-code mono">{{ m.path }}</div>
+      {% if m.path == active %}
+        <span class="map-badge">{{ t('maps_current') }}</span>
+      {% else %}
+        <button class="btn tiny" type="submit">{{ t('maps_select_btn') }}</button>
+      {% endif %}
+    </form>
+    {% endfor %}
+  </div>
+
+  {% if custom %}
+  <h3 class="subhead">{{ t('maps_custom') }}</h3>
+  <div class="map-grid">
+    {% for m in custom %}
+    <div class="map-card {{ 'on' if m.path == active }}">
+      <div class="map-name">{{ m.name }}</div>
+      <div class="map-code mono">{{ m.path }}</div>
+      <div class="map-card-actions">
+        {% if m.path == active %}
+          <span class="map-badge">{{ t('maps_current') }}</span>
+        {% else %}
+          <form method="post" action="{{ url_for('maps_select') }}" class="inline">
+            <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+            <input type="hidden" name="path" value="{{ m.path }}">
+            <button class="btn tiny" type="submit">{{ t('maps_select_btn') }}</button>
+          </form>
+        {% endif %}
+        <form method="post" action="{{ url_for('maps_delete') }}" class="inline"
+              onsubmit="return confirm('{{ m.name }}?');">
+          <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+          <input type="hidden" name="path" value="{{ m.path }}">
+          <button class="btn tiny danger" type="submit">{{ t('maps_delete_btn') }}</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<section class="panel">
+  <div class="panel-head"><h2>{{ t('maps_add_title') }}</h2></div>
+  <p class="muted small" style="margin-top:0">{{ t('maps_custom_note') }}</p>
+  <form method="post" action="{{ url_for('maps_add') }}" class="map-add">
+    <input type="hidden" name="csrf" value="{{ csrf_token() }}">
+    <input name="code" placeholder="{{ t('maps_add_code_ph') }}" spellcheck="false" required>
+    <input name="name" placeholder="{{ t('maps_add_name_ph') }}" spellcheck="false">
+    <button class="btn primary" type="submit">{{ t('maps_add_btn') }}</button>
+  </form>
+</section>
+{% endblock %}

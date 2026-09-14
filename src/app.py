@@ -51,6 +51,10 @@ PLUGIN_DISABLED_DIR = os.path.join(RESOURCES_DIR, "Server-disabled")
 VERSION_FILE = os.path.join(SERVER_DIR, ".installed_version")
 GITHUB_RELEASES = "https://api.github.com/repos/BeamMP/BeamMP-Server/releases/latest"
 
+# Panel-Verzeichnis (für Nebendateien wie maps.json)
+PANEL_DIR = os.path.dirname(os.path.abspath(CONFIG_PATH))
+MAPS_PATH = CONF.get("maps_path", os.path.join(PANEL_DIR, "maps.json"))
+
 app = Flask(__name__)
 app.secret_key = CONF["secret_key"]
 app.config["MAX_CONTENT_LENGTH"] = 2 * 1024 * 1024 * 1024  # 2 GiB Upload-Limit für Mods
@@ -78,6 +82,28 @@ DEFAULT_SETTINGS = [
     ("ResourceFolder", "Resources", "str"),
 ]
 
+# In BeamNG.drive enthaltene Standard-Karten (Pfad, Anzeigename) fuer das Dropdown.
+# Eigene Karten werden als .zip in Resources/Client hochgeladen und per Pfad
+# /levels/<ordnername>/info.json eingetragen ("Eigene Karte ..." im Menue).
+STOCK_MAPS = [
+    ("/levels/gridmap_v2/info.json", "Grid Map V2"),
+    ("/levels/automation_test_track/info.json", "Automation Test Track"),
+    ("/levels/east_coast_usa/info.json", "East Coast USA"),
+    ("/levels/west_coast_usa/info.json", "West Coast USA"),
+    ("/levels/italy/info.json", "Italy"),
+    ("/levels/utah/info.json", "Utah"),
+    ("/levels/johnson_valley/info.json", "Johnson Valley"),
+    ("/levels/jungle_rock_island/info.json", "Jungle Rock Island"),
+    ("/levels/small_island/info.json", "Small Island"),
+    ("/levels/hirochi_raceway/info.json", "Hirochi Raceway"),
+    ("/levels/industrial/info.json", "Industrial"),
+    ("/levels/driver_training/info.json", "Driver Training"),
+    ("/levels/derby/info.json", "Derby"),
+    ("/levels/cliff/info.json", "Cliff"),
+    ("/levels/smallgrid/info.json", "Small Grid"),
+]
+STOCK_MAP_PATHS = [p for p, _ in STOCK_MAPS]
+
 # ---------------------------------------------------------------------------
 # Benutzer-Store (users.json) – alle Konten sind gleichberechtigt
 # ---------------------------------------------------------------------------
@@ -86,6 +112,7 @@ USERS_PATH = CONF.get("users_path",
 USERNAME_RE = re.compile(r"^[A-Za-z0-9_.-]{2,32}$")
 MIN_PW = 6
 _users_lock = threading.Lock()
+_maps_lock = threading.Lock()
 
 
 def load_users():
@@ -837,11 +864,148 @@ def console():
         return jsonify(ok=False, msg=t("console_failed", err=str(e)))
 
 
+# ---------------------------------------------------------------------------
+# Karten (Maps) – eigene Seite, aktive Karte = Map-Wert in der ServerConfig.toml
+# ---------------------------------------------------------------------------
+_MAP_PATH_RE = re.compile(r"^/levels/[A-Za-z0-9_\-]+/info\.json$")
+MAP_MAXLEN = 100  # Backend-Limit von BeamMP für den Map-Wert
+
+
+def _load_json(path, default):
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as fh:
+                return json.load(fh)
+        except (json.JSONDecodeError, OSError):
+            return json.loads(json.dumps(default))
+    return json.loads(json.dumps(default))
+
+
+def _save_json(path, data, mode=0o600):
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        json.dump(data, fh, indent=2)
+    os.chmod(tmp, mode)
+    os.replace(tmp, path)
+
+
+def load_custom_maps():
+    """Eigene Karten als Liste aus {name, path}."""
+    data = _load_json(MAPS_PATH, {"maps": []})
+    out = []
+    for m in data.get("maps", []):
+        p = (m.get("path") or "").strip()
+        if p:
+            out.append({"name": (m.get("name") or p).strip(), "path": p})
+    return out
+
+
+def save_custom_maps(maps):
+    _save_json(MAPS_PATH, {"maps": maps})
+
+
+def build_map_path(text):
+    """Ordnername -> /levels/<ordner>/info.json ; vollständigen Pfad unverändert lassen."""
+    text = text.strip()
+    if text.startswith("/levels/"):
+        return text
+    return "/levels/%s/info.json" % text
+
+
+def all_map_paths():
+    return STOCK_MAP_PATHS + [m["path"] for m in load_custom_maps()]
+
+
+def map_name_for(path):
+    for p, label in STOCK_MAPS:
+        if p == path:
+            return label
+    for m in load_custom_maps():
+        if m["path"] == path:
+            return m["name"]
+    return path
+
+
+def active_map():
+    return (settings_lookup().get("Map") or "").strip()
+
+
+@app.route("/maps")
+@login_required
+def maps_page():
+    active = active_map()
+    return render_template(
+        "maps.html",
+        official=[{"name": n, "path": p} for p, n in STOCK_MAPS],
+        custom=load_custom_maps(),
+        active=active,
+        active_name=map_name_for(active) if active else "",
+    )
+
+
+@app.route("/maps/select", methods=["POST"])
+@login_required
+def maps_select():
+    if not check_csrf():
+        flash(t("csrf_invalid"))
+        return redirect(url_for("maps_page"))
+    path = request.form.get("path", "").strip()
+    if path not in all_map_paths():
+        flash(t("map_not_found"))
+    elif len(path) > MAP_MAXLEN:
+        flash(t("map_too_long", n=MAP_MAXLEN))
+    else:
+        write_settings({"Map": path})
+        flash(t("map_selected", name=map_name_for(path)))
+    return redirect(url_for("maps_page"))
+
+
+@app.route("/maps/add", methods=["POST"])
+@login_required
+def maps_add():
+    if not check_csrf():
+        flash(t("csrf_invalid"))
+        return redirect(url_for("maps_page"))
+    raw_code = request.form.get("code", "").strip()
+    name = request.form.get("name", "").strip()
+    path = build_map_path(raw_code) if raw_code else ""
+    if not raw_code or not _MAP_PATH_RE.match(path):
+        flash(t("map_code_invalid"))
+    elif len(path) > MAP_MAXLEN:
+        flash(t("map_too_long", n=MAP_MAXLEN))
+    elif path in all_map_paths():
+        flash(t("map_exists"))
+    else:
+        with _maps_lock:
+            maps = load_custom_maps()
+            maps.append({"name": name or raw_code, "path": path})
+            save_custom_maps(maps)
+        flash(t("map_added", name=name or raw_code))
+    return redirect(url_for("maps_page"))
+
+
+@app.route("/maps/delete", methods=["POST"])
+@login_required
+def maps_delete():
+    if not check_csrf():
+        flash(t("csrf_invalid"))
+        return redirect(url_for("maps_page"))
+    path = request.form.get("path", "").strip()
+    with _maps_lock:
+        maps = load_custom_maps()
+        if not any(m["path"] == path for m in maps):
+            flash(t("map_not_found"))
+        else:
+            save_custom_maps([m for m in maps if m["path"] != path])
+            flash(t("map_deleted"))
+    return redirect(url_for("maps_page"))
+
+
 @app.route("/config", methods=["GET"])
 @login_required
 def config():
     settings, raw, _active, using_default = read_settings()
-    settings = [s for s in settings if s[0] not in LOCKED_OPTIONS]
+    settings = [s for s in settings if s[0] not in LOCKED_OPTIONS and s[0] != "Map"]
     return render_template("config.html", settings=settings, raw=raw,
                            using_default=using_default, cfg_path=CONFIG_FILE,
                            game_port=game_port())

@@ -7,6 +7,7 @@ DEFAULT_LANG = "de"
 TRANSLATIONS = {
     # -- Navigation / allgemein --
     "nav_overview": {"de": "Übersicht", "en": "Overview"},
+    "nav_maps": {"de": "Karten", "en": "Maps"},
     "nav_config": {"de": "Konfiguration", "en": "Configuration"},
     "nav_mods": {"de": "Mods", "en": "Mods"},
     "nav_users": {"de": "Benutzer", "en": "Users"},
@@ -124,6 +125,39 @@ TRANSLATIONS = {
               "keymaster.beammp.com. Ohne Key ist nur Direktverbindung per IP möglich.",
         "en": "AuthKey is required for the public server list – free at keymaster.beammp.com. "
               "Without a key, only direct IP connections work."},
+    "maps_active": {"de": "Aktive Karte", "en": "Active map"},
+    "maps_active_hint": {"de": "Änderungen an der Karte wirken nach einem Server-Neustart.",
+                         "en": "Map changes take effect after a server restart."},
+    "maps_official": {"de": "Offizielle Karten", "en": "Official maps"},
+    "maps_custom": {"de": "Eigene Karten", "en": "Custom maps"},
+    "maps_custom_note": {
+        "de": "Eigene Karten zuerst als .zip in Resources/Client hochladen (Seite „Mods“). "
+              "Den Ordnernamen aus der .zip (im Ordner levels/) hier eintragen – BeamMP "
+              "schickt die Karte beim Verbinden automatisch an die Spieler.",
+        "en": "First upload the custom map as a .zip to Resources/Client (\"Mods\" page). "
+              "Enter the folder name from inside the .zip (in the levels/ folder) here – "
+              "BeamMP sends the map to players automatically on connect."},
+    "maps_select_btn": {"de": "Als aktive Karte setzen", "en": "Set as active map"},
+    "maps_current": {"de": "aktiv", "en": "active"},
+    "maps_add_title": {"de": "Eigene Karte hinzufügen", "en": "Add custom map"},
+    "maps_add_code_ph": {"de": "Ordnername (z. B. mein_drift) oder /levels/…/info.json",
+                         "en": "Folder name (e.g. my_drift) or /levels/…/info.json"},
+    "maps_add_name_ph": {"de": "Anzeigename", "en": "Display name"},
+    "maps_add_btn": {"de": "Karte hinzufügen", "en": "Add map"},
+    "maps_delete_btn": {"de": "Entfernen", "en": "Remove"},
+    "map_selected": {"de": "Karte „{name}“ als aktive Karte gesetzt.",
+                     "en": "Map \"{name}\" set as active map."},
+    "map_added": {"de": "Karte „{name}“ hinzugefügt.", "en": "Map \"{name}\" added."},
+    "map_deleted": {"de": "Karte entfernt.", "en": "Map removed."},
+    "map_not_found": {"de": "Karte nicht gefunden.", "en": "Map not found."},
+    "map_exists": {"de": "Diese Karte ist bereits vorhanden.", "en": "This map already exists."},
+    "map_code_invalid": {
+        "de": "Ungültiger Ordnername/Pfad. Erlaubt: Buchstaben, Ziffern, _ und - "
+              "(oder vollständiger Pfad /levels/<ordner>/info.json).",
+        "en": "Invalid folder name/path. Allowed: letters, digits, _ and - "
+              "(or full path /levels/<folder>/info.json)."},
+    "map_too_long": {"de": "Der Kartenpfad ist zu lang (max. {n} Zeichen).",
+                     "en": "The map path is too long (max. {n} characters)."},
     "tab_settings": {"de": "Einstellungen", "en": "Settings"},
     "tab_raw": {"de": "Rohdatei", "en": "Raw file"},
     "cfg_save_hint": {"de": "Änderungen wirken nach einem Server-Neustart.",

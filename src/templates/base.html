@@ -16,6 +16,7 @@
     </a>
     <nav class="nav">
       <a href="{{ url_for('dashboard') }}" class="{{ 'on' if request.endpoint == 'dashboard' }}">{{ t('nav_overview') }}</a>
+      <a href="{{ url_for('maps_page') }}" class="{{ 'on' if request.endpoint == 'maps_page' }}">{{ t('nav_maps') }}</a>
       <a href="{{ url_for('config') }}" class="{{ 'on' if request.endpoint == 'config' }}">{{ t('nav_config') }}</a>
       <a href="{{ url_for('mods_page') }}" class="{{ 'on' if request.endpoint == 'mods_page' }}">{{ t('nav_mods') }}</a>
       <a href="{{ url_for('users_page') }}" class="{{ 'on' if request.endpoint == 'users_page' }}">{{ t('nav_users') }}</a>
